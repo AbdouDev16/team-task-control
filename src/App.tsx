@@ -14,6 +14,8 @@ import Projects from "./pages/Projects";
 import Tasks from "./pages/Tasks";
 import Calendar from "./pages/Calendar";
 import Users from "./pages/Users";
+import Reports from "./pages/Reports";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
 
@@ -37,11 +39,17 @@ const App = () => (
               <Route path="/projects" element={<Projects />} />
               <Route path="/tasks" element={<Tasks />} />
               <Route path="/calendar" element={<Calendar />} />
+              <Route path="/settings" element={<Settings />} />
             </Route>
             
             {/* Routes only for Admin and Manager */}
             <Route element={<RoleBasedRoute allowedRoles={['Admin', 'Gérant']} />}>
               <Route path="/users" element={<Users />} />
+            </Route>
+
+            {/* Routes for Admin, Manager and Project Manager */}
+            <Route element={<RoleBasedRoute allowedRoles={['Admin', 'Gérant', 'Chef_Projet']} />}>
+              <Route path="/reports" element={<Reports />} />
             </Route>
             
             {/* Catch-all route */}
