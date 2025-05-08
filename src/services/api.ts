@@ -1,7 +1,7 @@
 
 import { User, Project, Task, Report } from '../types';
 
-const API_URL = 'http://localhost/gestion_des_projets/api'; // Ajustez l'URL selon votre configuration locale
+const API_URL = 'http://localhost/api'; // Ajustez l'URL selon votre configuration locale
 
 // Fonction générique pour les requêtes HTTP
 const fetchData = async (
