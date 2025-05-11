@@ -1,7 +1,7 @@
 
 <?php
 // Autoriser les requêtes cross-origin (CORS)
-header("Access-Control-Allow-Origin: http://localhost:5173"); // Ajustez selon l'URL de votre frontend React
+header("Access-Control-Allow-Origin:  http://localhost:8081"); // Ajustez selon l'URL de votre frontend React
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Methods: GET, OPTIONS");

@@ -85,13 +85,7 @@ const Index = () => {
           </form>
         </Card>
         
-        <div className="mt-6 text-center text-sm text-muted-foreground">
-          <p className="mb-2">Pour la démonstration, utilisez :</p>
-          <p>Admin: admin / admin</p>
-          <p>Gérant: manager / manager</p>
-          <p>Chef de Projet: pm / pm</p>
-          <p>Employé: employee / employee</p>
-        </div>
+       
       </div>
     </div>
   );

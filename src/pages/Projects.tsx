@@ -94,7 +94,7 @@ const Projects = () => {
               <Dialog open={openDialog} onOpenChange={setOpenDialog}>
                 <DialogTrigger asChild>
                   <Button>
-                    <Plus className="mr-2 h-4 w-4" /> Nouveau projet
+                    <Plus className="mr-2 h-4 w-4" /> Nouveau Projet
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
