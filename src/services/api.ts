@@ -1,5 +1,6 @@
 
 import { User, Project, Task, Report } from '../types';
+import { toast } from 'sonner';
 
 const API_URL = 'http://localhost/api'; // Ajustez l'URL selon votre configuration locale
 
@@ -25,8 +26,15 @@ const fetchData = async (
     const response = await fetch(`${API_URL}/${endpoint}`, options);
     
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Une erreur est survenue');
+      let errorMessage = 'Une erreur est survenue';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+        // Si la réponse n'est pas du JSON
+        errorMessage = `Erreur HTTP ${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
     }
 
     // Pour les requêtes DELETE qui peuvent ne pas retourner de contenu
@@ -34,9 +42,12 @@ const fetchData = async (
       return { success: true };
     }
 
-    return await response.json();
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('API error:', error);
+    // Afficher un toast d'erreur
+    toast.error(error instanceof Error ? error.message : 'Une erreur est survenue');
     throw error;
   }
 };
@@ -132,4 +143,15 @@ export const reportService = {
   
   delete: (id: number) => 
     fetchData(`reports/delete.php?id=${id}`, 'DELETE')
+};
+
+// Fonction pour tester la connexion à l'API
+export const testApiConnection = () => {
+  return fetch(`${API_URL}/test_connection.php`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    });
 };

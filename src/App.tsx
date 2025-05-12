@@ -18,6 +18,7 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
+import ApiTest from "./pages/ApiTest";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
             {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route path="/api-test" element={<ApiTest />} />
             
             {/* Protected routes for all authenticated users */}
             <Route element={<RoleBasedRoute />}>

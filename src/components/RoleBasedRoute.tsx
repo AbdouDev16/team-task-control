@@ -6,10 +6,12 @@ import { UserRole } from '../types';
 
 interface RoleBasedRouteProps {
   allowedRoles?: UserRole[];
+  children?: React.ReactNode;
 }
 
 const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({ 
-  allowedRoles = ['Admin', 'Gérant', 'Chef_Projet', 'Employé'] 
+  allowedRoles = ['Admin', 'Gérant', 'Chef_Projet', 'Employé'],
+  children 
 }) => {
   const { user, isAuthenticated } = useAuth();
 
@@ -18,7 +20,7 @@ const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
   }
 
   if (user && allowedRoles.includes(user.role)) {
-    return <Outlet />;
+    return children ? <>{children}</> : <Outlet />;
   }
 
   return <Navigate to="/unauthorized" replace />;
