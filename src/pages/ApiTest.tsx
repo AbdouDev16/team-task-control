@@ -127,7 +127,7 @@ const ApiTest = () => {
                   <AccordionItem value={table} key={table}>
                     <AccordionTrigger>
                       Table: {table}
-                      <Badge variant={testResults.tables[table].exists ? "success" : "destructive"} className="ml-2">
+                      <Badge variant={testResults.tables[table].exists ? "default" : "destructive"} className="ml-2">
                         {testResults.tables[table].exists ? "Existe" : "Manquante"}
                       </Badge>
                     </AccordionTrigger>
@@ -161,7 +161,7 @@ const ApiTest = () => {
                   <div key={file} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-900 rounded-md">
                     <span>{file}</span>
                     {testResults.files[file].exists ? (
-                      <Badge className="bg-green-500">Existe</Badge>
+                      <Badge className="bg-green-500" variant="default">Existe</Badge>
                     ) : (
                       <Badge variant="destructive">Manquant</Badge>
                     )}

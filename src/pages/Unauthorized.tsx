@@ -1,12 +1,17 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Unauthorized = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleGoBack = () => {
+    navigate(-1);
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
@@ -24,11 +29,14 @@ const Unauthorized = () => {
           </p>
         )}
         <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2 justify-center">
+          <Button onClick={handleGoBack} variant="outline" className="flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" /> Retour
+          </Button>
           <Button asChild>
-            <Link to="/dashboard">Retour au tableau de bord</Link>
+            <Link to="/dashboard">Tableau de bord</Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link to="/">Retour à l'accueil</Link>
+            <Link to="/">Accueil</Link>
           </Button>
         </div>
       </div>

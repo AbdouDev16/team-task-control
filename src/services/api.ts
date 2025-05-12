@@ -2,7 +2,7 @@
 import { User, Project, Task, Report } from '../types';
 import { toast } from 'sonner';
 
-const API_URL = 'http://localhost/api'; // Ajustez l'URL selon votre configuration locale
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost/api'; 
 
 // Fonction générique pour les requêtes HTTP
 const fetchData = async (
@@ -23,6 +23,7 @@ const fetchData = async (
   }
 
   try {
+    console.log(`Fetching ${API_URL}/${endpoint}...`);
     const response = await fetch(`${API_URL}/${endpoint}`, options);
     
     if (!response.ok) {

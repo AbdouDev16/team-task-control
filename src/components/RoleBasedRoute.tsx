@@ -1,8 +1,9 @@
 
-import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
+import { toast } from 'sonner';
 
 interface RoleBasedRouteProps {
   allowedRoles?: UserRole[];
@@ -14,9 +15,18 @@ const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
   children 
 }) => {
   const { user, isAuthenticated } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Si l'utilisateur est authentifié mais n'a pas le rôle requis, afficher une notification
+    if (isAuthenticated && user && !allowedRoles.includes(user.role)) {
+      toast.error(`Accès refusé. Vous n'avez pas les permissions nécessaires.`);
+    }
+  }, [isAuthenticated, user, allowedRoles, location.pathname]);
 
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    // Rediriger vers la page de connexion et conserver l'URL actuelle comme destination après connexion
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
 
   if (user && allowedRoles.includes(user.role)) {
