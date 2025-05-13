@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
@@ -18,7 +17,7 @@ import {
   Search,
   Edit,
   Trash2,
-  User,
+  User as UserIcon,
   UserCog,
   Users as UsersIcon,
   Loader2
@@ -50,6 +49,11 @@ import { userService } from '@/services/api';
 interface UserWithDetails extends User {
   nom?: string;
   prenom?: string;
+  details?: {
+    nom?: string;
+    prenom?: string;
+    [key: string]: any;
+  };
 }
 
 const Users = () => {
@@ -132,8 +136,8 @@ const Users = () => {
   const roleIcons = {
     'Admin': <UserCog size={16} />,
     'Gérant': <UserCog size={16} />,
-    'Chef_Projet': <User size={16} />,
-    'Employé': <User size={16} />
+    'Chef_Projet': <UserIcon size={16} />,
+    'Employé': <UserIcon size={16} />
   };
   
   const roleBadgeClasses = {
@@ -318,10 +322,10 @@ const Users = () => {
                 <UserCog size={14} /> Gérants
               </TabsTrigger>
               <TabsTrigger value="project-managers" className="flex gap-2 items-center">
-                <User size={14} /> Chefs de projet
+                <UserIcon size={14} /> Chefs de projet
               </TabsTrigger>
               <TabsTrigger value="employees" className="flex gap-2 items-center">
-                <User size={14} /> Employés
+                <UserIcon size={14} /> Employés
               </TabsTrigger>
             </TabsList>
           </Tabs>
