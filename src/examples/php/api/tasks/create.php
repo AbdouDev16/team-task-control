@@ -30,11 +30,11 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Vérifier le rôle de l'utilisateur
-$allowed_roles = ['Admin', 'Gérant', 'Chef_Projet'];
+// Vérifier le rôle de l'utilisateur (seuls les chefs de projet peuvent créer des tâches)
+$allowed_roles = ['Chef_Projet'];
 if (!in_array($_SESSION['role'], $allowed_roles)) {
     http_response_code(403);
-    echo json_encode(['message' => 'Accès interdit']);
+    echo json_encode(['message' => 'Seuls les chefs de projet peuvent créer des tâches']);
     exit();
 }
 
