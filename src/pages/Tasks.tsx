@@ -5,7 +5,7 @@ import Sidebar from '@/components/Sidebar';
 import { Task } from '@/types';
 
 // Custom hooks
-import { useTasksService } from '@/hooks/useTasksService';
+import { useTasksService } from '@/hooks/tasks';
 
 // Components
 import TasksHeader from '@/components/tasks/TasksHeader';
