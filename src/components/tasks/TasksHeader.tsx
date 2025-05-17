@@ -19,6 +19,7 @@ interface TasksHeaderProps {
   handleUpdateTask: (formData: any) => Promise<void>;
   projects: Project[];
   employees: any[];
+  canCreateTask?: boolean; // Added this prop to the interface
 }
 
 const TasksHeader: React.FC<TasksHeaderProps> = ({
@@ -32,15 +33,16 @@ const TasksHeader: React.FC<TasksHeaderProps> = ({
   handleCreateTask,
   handleUpdateTask,
   projects,
-  employees
+  employees,
+  canCreateTask
 }) => {
   const { user } = useAuth();
-  const canCreateTask = user?.role === 'Chef_Projet';
+  const userCanCreateTask = canCreateTask ?? (user?.role === 'Chef_Projet');
 
   return (
     <div className="flex justify-between items-center mb-6">
       <h1 className="text-2xl font-semibold">{title}</h1>
-      {canCreateTask && (
+      {userCanCreateTask && (
         <Dialog open={openDialog} onOpenChange={setOpenDialog}>
           <Button onClick={handleOpenDialog}>
             <Plus className="mr-2 h-4 w-4" /> Nouvelle tâche

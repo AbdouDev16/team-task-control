@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
@@ -11,7 +12,7 @@ import ProjectsList from '@/components/projects/ProjectsList';
 import DeleteProjectDialog from '@/components/projects/DeleteProjectDialog';
 
 const Projects = () => {
-  const { apiAvailable } = useAuth();
+  const { apiAvailable, user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
