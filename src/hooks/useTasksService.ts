@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Task, Project, TaskStatus } from '@/types';
 import { taskService, projectService, userService } from '@/services/api';
@@ -19,7 +18,7 @@ export const useTasksService = () => {
   const [loading, setLoading] = useState(false);
   
   const isEmployee = user?.role === 'Employé';
-  const canCreateTask = user?.role !== 'Employé';
+  const canCreateTask = user?.role === 'Chef_Projet';
 
   useEffect(() => {
     if (apiAvailable) {
@@ -195,6 +194,11 @@ export const useTasksService = () => {
 
   const createTask = async (formData: any) => {
     try {
+      if (!canCreateTask) {
+        toast.error("Seuls les chefs de projet peuvent créer des tâches");
+        return false;
+      }
+      
       if (apiAvailable) {
         const response = await taskService.create(formData);
         // Ajouter la tâche avec projets et employés appropriés
@@ -237,12 +241,17 @@ export const useTasksService = () => {
 
   const updateTask = async (taskId: number, formData: any) => {
     try {
+      if (!canCreateTask) {
+        toast.error("Seuls les chefs de projet peuvent modifier des tâches");
+        return false;
+      }
+      
       if (apiAvailable) {
         const response = await taskService.update(taskId, formData);
         // Mettre à jour la tâche avec projets et employés appropriés
         const updatedTask = response.task;
         const project = projects.find(p => p.id === updatedTask.projet_id);
-        const employee = formData.employe_id ? employees.find(e => e.id === updatedTask.employe_id) : null;
+        const employee = formData.employe_id ? employees.find(e => e.id === formData.employe_id) : null;
         setTasks(tasks.map(t => t.id === taskId ? {
           ...updatedTask,
           projet_nom: project?.nom,

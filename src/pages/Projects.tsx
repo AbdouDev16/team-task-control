@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
@@ -12,7 +11,7 @@ import ProjectsList from '@/components/projects/ProjectsList';
 import DeleteProjectDialog from '@/components/projects/DeleteProjectDialog';
 
 const Projects = () => {
-  const { user, apiAvailable } = useAuth();
+  const { apiAvailable } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -27,10 +26,9 @@ const Projects = () => {
     loading,
     createProject,
     updateProject,
-    deleteProject
+    deleteProject,
+    canModifyProject
   } = useProjectsService(apiAvailable);
-  
-  const canCreateProject = user?.role !== 'Employé';
 
   // Filtre et tri des projets
   const filteredAndSortedProjects = projects
@@ -63,25 +61,32 @@ const Projects = () => {
     });
 
   const handleCreateProject = async (formData: any) => {
-    await createProject(formData);
-    setOpenDialog(false);
+    const success = await createProject(formData);
+    if (success) {
+      setOpenDialog(false);
+    }
   };
 
   const handleUpdateProject = async (formData: any) => {
     if (!currentProject) return;
-    await updateProject(currentProject.id, formData);
-    setOpenDialog(false);
-    setCurrentProject(null);
-    setIsEditMode(false);
+    const success = await updateProject(currentProject.id, formData);
+    if (success) {
+      setOpenDialog(false);
+      setCurrentProject(null);
+      setIsEditMode(false);
+    }
   };
 
   const handleDeleteProject = async () => {
     if (!projectToDelete) return;
-    await deleteProject(projectToDelete);
-    setProjectToDelete(null);
+    const success = await deleteProject(projectToDelete);
+    if (success) {
+      setProjectToDelete(null);
+    }
   };
 
   const handleEditProject = (project: ProjectWithProgress) => {
+    if (!canModifyProject) return;
     setCurrentProject(project);
     setIsEditMode(true);
     setOpenDialog(true);
@@ -100,7 +105,6 @@ const Projects = () => {
         <Header title="Projets" />
         <div className="flex-1 overflow-auto p-6">
           <ProjectsHeader 
-            canCreateProject={canCreateProject}
             projectManagers={projectManagers}
             onCreateProject={handleCreateProject}
           />

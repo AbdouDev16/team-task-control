@@ -3,6 +3,7 @@ import React from 'react';
 import { Loader2 } from 'lucide-react';
 import ProjectCard from '@/components/ProjectCard';
 import { ProjectWithProgress } from '@/hooks/useProjectsService';
+import { useAuth } from '@/context/AuthContext';
 
 interface ProjectsListProps {
   projects: ProjectWithProgress[];
@@ -17,6 +18,9 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
   onEdit,
   onDelete
 }) => {
+  const { user } = useAuth();
+  const canModifyProject = user?.role === 'Admin' || user?.role === 'Gérant';
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -32,8 +36,8 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
           key={project.id} 
           project={project} 
           progress={project.progress || 0}
-          onEdit={() => onEdit(project)}
-          onDelete={() => onDelete(project.id)}
+          onEdit={canModifyProject ? () => onEdit(project) : undefined}
+          onDelete={canModifyProject ? () => onDelete(project.id) : undefined}
         />
       ))}
       

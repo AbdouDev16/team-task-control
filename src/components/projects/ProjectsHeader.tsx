@@ -5,19 +5,20 @@ import { Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ProjectForm from '@/components/forms/ProjectForm';
 import { ProjectManager } from '@/hooks/useProjectsService';
+import { useAuth } from '@/context/AuthContext';
 
 interface ProjectsHeaderProps {
-  canCreateProject: boolean;
   projectManagers: ProjectManager[];
   onCreateProject: (formData: any) => Promise<void>;
 }
 
 const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({ 
-  canCreateProject, 
   projectManagers,
   onCreateProject 
 }) => {
+  const { user } = useAuth();
   const [openDialog, setOpenDialog] = useState(false);
+  const canCreateProject = user?.role === 'Admin' || user?.role === 'Gérant';
 
   const handleOpenDialog = () => {
     setOpenDialog(true);

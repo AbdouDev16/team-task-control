@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import TaskForm from '@/components/forms/TaskForm';
 import { Project, Task } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 
 interface TasksHeaderProps {
   title: string;
@@ -18,7 +19,6 @@ interface TasksHeaderProps {
   handleUpdateTask: (formData: any) => Promise<void>;
   projects: Project[];
   employees: any[];
-  canCreateTask: boolean;
 }
 
 const TasksHeader: React.FC<TasksHeaderProps> = ({
@@ -32,9 +32,11 @@ const TasksHeader: React.FC<TasksHeaderProps> = ({
   handleCreateTask,
   handleUpdateTask,
   projects,
-  employees,
-  canCreateTask
+  employees
 }) => {
+  const { user } = useAuth();
+  const canCreateTask = user?.role === 'Chef_Projet';
+
   return (
     <div className="flex justify-between items-center mb-6">
       <h1 className="text-2xl font-semibold">{title}</h1>

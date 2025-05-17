@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { projectService, userService } from '@/services/api';
 import { Project } from '@/types';
 import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
 
 export interface ProjectWithProgress extends Project {
   progress?: number;
@@ -17,9 +17,12 @@ export interface ProjectManager {
 }
 
 export function useProjectsService(apiAvailable: boolean) {
+  const { user } = useAuth();
   const [projects, setProjects] = useState<ProjectWithProgress[]>([]);
   const [projectManagers, setProjectManagers] = useState<ProjectManager[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const canModifyProject = user?.role === 'Admin' || user?.role === 'Gérant';
 
   useEffect(() => {
     if (apiAvailable) {
@@ -138,6 +141,11 @@ export function useProjectsService(apiAvailable: boolean) {
 
   const createProject = async (formData: any) => {
     try {
+      if (!canModifyProject) {
+        toast.error("Seuls les administrateurs et les gérants peuvent créer des projets");
+        return false;
+      }
+      
       if (apiAvailable) {
         const response = await projectService.create(formData);
         // Ajouter le projet avec chef de projet approprié
@@ -176,6 +184,11 @@ export function useProjectsService(apiAvailable: boolean) {
 
   const updateProject = async (projectId: number, formData: any) => {
     try {
+      if (!canModifyProject) {
+        toast.error("Seuls les administrateurs et les gérants peuvent modifier des projets");
+        return false;
+      }
+      
       if (apiAvailable) {
         const response = await projectService.update(projectId, formData);
         // Mettre à jour le projet avec détails appropriés
@@ -213,6 +226,11 @@ export function useProjectsService(apiAvailable: boolean) {
 
   const deleteProject = async (projectId: number) => {
     try {
+      if (!canModifyProject) {
+        toast.error("Seuls les administrateurs et les gérants peuvent supprimer des projets");
+        return false;
+      }
+      
       setLoading(true);
       if (apiAvailable) {
         await projectService.delete(projectId);
@@ -221,9 +239,11 @@ export function useProjectsService(apiAvailable: boolean) {
       // Mise à jour de l'UI
       setProjects(projects.filter(p => p.id !== projectId));
       toast.success("Projet supprimé avec succès");
+      return true;
     } catch (error) {
       console.error('Failed to delete project:', error);
       toast.error("Erreur lors de la suppression du projet");
+      return false;
     } finally {
       setLoading(false);
     }
@@ -235,6 +255,7 @@ export function useProjectsService(apiAvailable: boolean) {
     loading,
     createProject,
     updateProject,
-    deleteProject
+    deleteProject,
+    canModifyProject
   };
 }
