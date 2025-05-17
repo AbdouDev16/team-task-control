@@ -2,32 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, Download, FileText, PlusCircle, Edit, Trash2, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { reportService } from '@/services/api';
 import { toast } from 'sonner';
 import { Report } from '@/types';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import ReportForm from '@/components/forms/ReportForm';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { 
+  ReportsHeader, 
+  ReportsSearch, 
+  ReportsList, 
+  DeleteReportDialog 
+} from '@/components/reports';
 
 const Reports = () => {
   const { user, apiAvailable } = useAuth();
@@ -204,141 +188,49 @@ const Reports = () => {
     setIsEditMode(false);
   };
 
-  // Filtrer les rapports en fonction du terme de recherche
-  const filteredReports = reports.filter(report => 
-    report.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    report.contenu.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
     <div className="flex h-screen">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header title="Rapports" />
         <div className="flex-1 overflow-auto p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Rapports de projets</h1>
-            {canCreateReports && (
-              <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-                <Button onClick={handleOpenDialog}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Nouveau rapport
-                </Button>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>
-                      {isEditMode ? "Modifier le rapport" : "Créer un nouveau rapport"}
-                    </DialogTitle>
-                  </DialogHeader>
-                  <ReportForm 
-                    initialData={currentReport || undefined}
-                    onSubmit={isEditMode ? handleUpdateReport : handleCreateReport}
-                    onCancel={handleCloseDialog}
-                  />
-                </DialogContent>
-              </Dialog>
-            )}
-          </div>
+          <ReportsHeader
+            title="Rapports de projets"
+            openDialog={openDialog}
+            setOpenDialog={setOpenDialog}
+            isEditMode={isEditMode}
+            currentReport={currentReport}
+            handleOpenDialog={handleOpenDialog}
+            handleCreateReport={handleCreateReport}
+            handleUpdateReport={handleUpdateReport}
+            handleCloseDialog={handleCloseDialog}
+            canCreateReports={canCreateReports}
+          />
           
-          <div className="relative flex-1 mb-6">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input 
-              type="search" 
-              placeholder="Rechercher un rapport..." 
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+          <ReportsSearch 
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+          />
 
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <div className="grid gap-6">
-              {filteredReports.map((report) => (
-                <Card key={report.id} className="overflow-hidden">
-                  <CardContent className="p-0">
-                    <div className="p-6">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h2 className="text-xl font-semibold mb-2">{report.titre}</h2>
-                          <div className="flex items-center text-sm text-muted-foreground mb-4">
-                            <Calendar className="mr-2 h-4 w-4" />
-                            <span>{formatDate(report.date_creation)}</span>
-                          </div>
-                        </div>
-                        {(isManagerOrAdmin || isProjectManager) && (
-                          <Button variant="outline" size="sm">
-                            <Download className="mr-2 h-4 w-4" />
-                            Télécharger
-                          </Button>
-                        )}
-                      </div>
-                      <p className="text-muted-foreground whitespace-pre-line">
-                        {report.contenu.length > 300 
-                          ? `${report.contenu.substring(0, 300)}...` 
-                          : report.contenu}
-                      </p>
-                    </div>
-                    <div className="bg-muted p-4 flex justify-between items-center">
-                      <div className="flex items-center">
-                        <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">Rapport #{report.id}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        {/* Chef de projet peut éditer/supprimer ses propres rapports */}
-                        {(isManagerOrAdmin || (isProjectManager && user?.id === report.chef_projet_id)) && (
-                          <>
-                            <Button variant="ghost" size="sm" onClick={() => handleEditReport(report)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Modifier
-                            </Button>
-                            <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(report.id)}>
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Supprimer
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-
-              {filteredReports.length === 0 && (
-                <div className="text-center py-12">
-                  <FileText className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4" />
-                  <h3 className="text-lg font-medium">Aucun rapport trouvé</h3>
-                  <p className="text-muted-foreground mt-2">
-                    {searchTerm 
-                      ? "Aucun rapport ne correspond à votre recherche." 
-                      : "Commencez par ajouter un nouveau rapport."}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+          <ReportsList 
+            reports={reports}
+            loading={loading}
+            isManagerOrAdmin={isManagerOrAdmin}
+            isProjectManager={isProjectManager}
+            userId={user?.id}
+            formatDate={formatDate}
+            handleEditReport={handleEditReport}
+            handleDelete={handleDelete}
+            searchTerm={searchTerm}
+          />
         </div>
       </div>
       
-      <AlertDialog open={reportToDelete !== null} onOpenChange={(open) => !open && setReportToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer ce rapport?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. Le rapport sera définitivement supprimé.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground">
-              Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteReportDialog 
+        reportToDelete={reportToDelete}
+        setReportToDelete={setReportToDelete}
+        confirmDelete={confirmDelete}
+      />
     </div>
   );
 };
