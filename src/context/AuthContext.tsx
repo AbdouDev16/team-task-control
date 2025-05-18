@@ -2,7 +2,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { User } from '@/types';
 import { authService } from '@/services/api';
-import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
@@ -10,6 +9,8 @@ interface AuthContextType {
   error: string | null;
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  isAuthenticated: boolean;
+  apiAvailable: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>(null!);
@@ -18,6 +19,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [apiAvailable, setApiAvailable] = useState<boolean>(false);
 
   // Vérifier si l'utilisateur est déjà connecté
   const checkAuth = async () => {
@@ -28,6 +30,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (response.user) {
         setUser(response.user);
         localStorage.setItem('user', JSON.stringify(response.user));
+        setApiAvailable(true);
       } else {
         setUser(null);
         localStorage.removeItem('user');
@@ -37,6 +40,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       localStorage.removeItem('user');
       setError('Session expirée ou non valide');
+      setApiAvailable(false);
     } finally {
       setLoading(false);
     }
@@ -54,6 +58,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(response.user);
         localStorage.setItem('user', JSON.stringify(response.user));
         setError(null);
+        setApiAvailable(true);
       } else {
         throw new Error('Échec de la connexion');
       }
@@ -61,6 +66,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       localStorage.removeItem('user');
       setError(error instanceof Error ? error.message : 'Échec de la connexion');
+      setApiAvailable(false);
       throw error;
     } finally {
       setLoading(false);
@@ -84,7 +90,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      error, 
+      login, 
+      logout, 
+      isAuthenticated: !!user,
+      apiAvailable 
+    }}>
       {children}
     </AuthContext.Provider>
   );

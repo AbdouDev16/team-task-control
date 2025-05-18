@@ -11,10 +11,12 @@ export interface User {
 
 export interface AuthContextType {
   user: User | null;
+  loading: boolean;
+  error: string | null;
   login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
-  apiAvailable?: boolean;
+  apiAvailable: boolean;
 }
 
 // Types pour les projets
