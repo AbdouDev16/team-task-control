@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
@@ -29,7 +28,7 @@ const Projects = () => {
     updateProject,
     deleteProject,
     canModifyProject
-  } = useProjectsService(apiAvailable);
+  } = useProjectsService();
 
   // Filtre et tri des projets
   const filteredAndSortedProjects = projects
