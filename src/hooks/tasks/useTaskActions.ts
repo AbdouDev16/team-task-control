@@ -1,156 +1,128 @@
 
-import { TaskStatus } from '@/types';
+import { Dispatch, SetStateAction } from 'react';
 import { taskService } from '@/services/api';
+import { Task, Project, Employee } from '@/types';
 import { toast } from 'sonner';
 
-interface TaskActionsProps {
-  apiAvailable: boolean | undefined;
-  tasks: any[];
-  projects: any[];
-  employees: any[];
-  setTasks: (tasks: any[]) => void;
+interface UseTaskActionsProps {
+  apiAvailable: boolean;
+  tasks: Task[];
+  projects: Project[];
+  employees: Employee[];
+  setTasks: Dispatch<SetStateAction<Task[]>>;
   canCreateTask: boolean;
-  setLoading: (loading: boolean) => void;
+  setLoading: Dispatch<SetStateAction<boolean>>;
 }
 
 export const useTaskActions = ({
   apiAvailable,
   tasks,
-  projects,
-  employees,
   setTasks,
   canCreateTask,
   setLoading
-}: TaskActionsProps) => {
+}: UseTaskActionsProps) => {
+  
   const createTask = async (formData: any) => {
-    try {
-      if (!canCreateTask) {
-        toast.error("Seuls les chefs de projet peuvent créer des tâches");
-        return false;
-      }
-      
-      if (apiAvailable) {
-        const response = await taskService.create(formData);
-        // Ajouter la tâche avec projets et employés appropriés
-        const newTask = response.task;
-        const project = projects.find(p => p.id === newTask.projet_id);
-        const employee = formData.employe_id ? employees.find(e => e.id === newTask.employe_id) : null;
-        setTasks([...tasks, {
-          ...newTask,
-          projet_nom: project?.nom,
-          employe_nom: employee?.nom,
-          employe_prenom: employee?.prenom
-        }]);
-      } else {
-        // Simulation en mode développement
-        const project = projects.find(p => p.id === formData.projet_id);
-        const employee = formData.employe_id ? employees.find(e => e.id === formData.employe_id) : null;
-        const newTask = {
-          id: tasks.length + 1,
-          nom: formData.nom,
-          description: formData.description,
-          projet_id: formData.projet_id,
-          projet_nom: project?.nom,
-          employe_id: formData.employe_id,
-          employe_nom: employee?.nom,
-          employe_prenom: employee?.prenom,
-          statut: formData.statut,
-          date_debut: formData.date_debut,
-          date_fin: formData.date_fin
-        };
-        setTasks([...tasks, newTask]);
-      }
-      toast.success("Tâche créée avec succès");
-      return true;
-    } catch (error) {
-      console.error('Error creating task:', error);
-      toast.error("Erreur lors de la création de la tâche");
-      throw error;
-    }
-  };
-
-  const updateTask = async (taskId: number, formData: any) => {
-    try {
-      if (!canCreateTask) {
-        toast.error("Seuls les chefs de projet peuvent modifier des tâches");
-        return false;
-      }
-      
-      if (apiAvailable) {
-        const response = await taskService.update(taskId, formData);
-        // Mettre à jour la tâche avec projets et employés appropriés
-        const updatedTask = response.task;
-        const project = projects.find(p => p.id === updatedTask.projet_id);
-        const employee = formData.employe_id ? employees.find(e => e.id === formData.employe_id) : null;
-        setTasks(tasks.map(t => t.id === taskId ? {
-          ...updatedTask,
-          projet_nom: project?.nom,
-          employe_nom: employee?.nom,
-          employe_prenom: employee?.prenom
-        } : t));
-      } else {
-        // Simulation en mode développement
-        const project = projects.find(p => p.id === formData.projet_id);
-        const employee = formData.employe_id ? employees.find(e => e.id === formData.employe_id) : null;
-        setTasks(tasks.map(t => t.id === taskId ? {
-          ...t,
-          nom: formData.nom,
-          description: formData.description,
-          projet_id: formData.projet_id,
-          projet_nom: project?.nom,
-          employe_id: formData.employe_id,
-          employe_nom: employee?.nom,
-          employe_prenom: employee?.prenom,
-          statut: formData.statut,
-          date_debut: formData.date_debut,
-          date_fin: formData.date_fin
-        } : t));
-      }
-      
-      toast.success("Tâche mise à jour avec succès");
-      return true;
-    } catch (error) {
-      console.error('Error updating task:', error);
-      toast.error("Erreur lors de la mise à jour de la tâche");
-      throw error;
-    }
-  };
-
-  const updateTaskStatus = async (taskId: number, newStatus: TaskStatus) => {
-    try {
-      if (apiAvailable) {
-        await taskService.updateStatus(taskId, newStatus);
-      }
-      
-      // Mise à jour de l'UI
-      setTasks(tasks.map(t => t.id === taskId ? { ...t, statut: newStatus } : t));
-      toast.success(`Statut mis à jour: ${newStatus}`);
-    } catch (error) {
-      console.error('Failed to update task status:', error);
-      toast.error("Erreur lors de la mise à jour du statut");
-    }
-  };
-
-  const deleteTask = async (taskId: number) => {
-    try {
-      setLoading(true);
-      if (apiAvailable) {
-        await taskService.delete(taskId);
-      }
-      
-      // Mise à jour de l'UI
-      setTasks(tasks.filter(t => t.id !== taskId));
-      toast.success("Tâche supprimée avec succès");
-      setLoading(false);
-      return true;
-    } catch (error) {
-      console.error('Failed to delete task:', error);
-      toast.error("Erreur lors de la suppression de la tâche");
-      setLoading(false);
+    if (!canCreateTask) {
+      toast.error('Vous n\'avez pas les permissions pour créer une tâche');
       return false;
     }
-  };
 
+    if (!apiAvailable) {
+      toast.error('API indisponible. Impossible de créer une tâche.');
+      return false;
+    }
+    
+    try {
+      setLoading(true);
+      const response = await taskService.create(formData);
+      
+      if (response.task) {
+        setTasks([...tasks, response.task]);
+        toast.success('Tâche créée avec succès');
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast.error('Erreur lors de la création de la tâche');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const updateTask = async (taskId: number, formData: any) => {
+    if (!apiAvailable) {
+      toast.error('API indisponible. Impossible de mettre à jour la tâche.');
+      return false;
+    }
+
+    try {
+      setLoading(true);
+      const response = await taskService.update(taskId, formData);
+      
+      if (response.task) {
+        setTasks(tasks.map(t => t.id === taskId ? response.task : t));
+        toast.success('Tâche mise à jour avec succès');
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error updating task:', error);
+      toast.error('Erreur lors de la mise à jour de la tâche');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const updateTaskStatus = async (taskId: number, status: string) => {
+    if (!apiAvailable) {
+      toast.error('API indisponible. Impossible de mettre à jour le statut.');
+      return false;
+    }
+
+    try {
+      setLoading(true);
+      const response = await taskService.updateStatus(taskId, status);
+      
+      if (response.task) {
+        setTasks(tasks.map(t => t.id === taskId ? response.task : t));
+        toast.success('Statut de la tâche mis à jour');
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      toast.error('Erreur lors de la mise à jour du statut');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const deleteTask = async (taskId: number) => {
+    if (!apiAvailable) {
+      toast.error('API indisponible. Impossible de supprimer la tâche.');
+      return false;
+    }
+
+    try {
+      setLoading(true);
+      await taskService.delete(taskId);
+      setTasks(tasks.filter(t => t.id !== taskId));
+      toast.success('Tâche supprimée avec succès');
+      return true;
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast.error('Erreur lors de la suppression de la tâche');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   return {
     createTask,
     updateTask,

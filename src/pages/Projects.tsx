@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { useAuth } from '@/context/AuthContext';
-import { useProjectsService, ProjectWithProgress } from '@/hooks/useProjectsService';
+import { useProjectsService } from '@/hooks/projects';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ProjectForm from '@/components/forms/ProjectForm';
 import ProjectsHeader from '@/components/projects/ProjectsHeader';
@@ -15,7 +16,7 @@ const Projects = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [currentProject, setCurrentProject] = useState<ProjectWithProgress | null>(null);
+  const [currentProject, setCurrentProject] = useState<any | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<number | null>(null);
   const [sortOrder, setSortOrder] = useState('nom-asc');
   const [filterType, setFilterType] = useState('all');
@@ -85,7 +86,7 @@ const Projects = () => {
     }
   };
 
-  const handleEditProject = (project: ProjectWithProgress) => {
+  const handleEditProject = (project: any) => {
     if (!canModifyProject) return;
     setCurrentProject(project);
     setIsEditMode(true);
@@ -105,8 +106,8 @@ const Projects = () => {
         <Header title="Projets" />
         <div className="flex-1 overflow-auto p-6">
           <ProjectsHeader 
-            projectManagers={projectManagers}
-            onCreateProject={handleCreateProject}
+            onCreateClick={() => { setIsEditMode(false); setOpenDialog(true); }}
+            canModifyProject={canModifyProject}
           />
           
           <ProjectsSearch 
@@ -123,19 +124,20 @@ const Projects = () => {
             loading={loading}
             onEdit={handleEditProject}
             onDelete={setProjectToDelete}
+            canModifyProject={canModifyProject}
           />
         </div>
       </div>
       
-      {/* Dialog for editing projects */}
-      <Dialog open={openDialog && isEditMode} onOpenChange={handleCloseDialog}>
+      {/* Dialog for creating/editing projects */}
+      <Dialog open={openDialog} onOpenChange={handleCloseDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Modifier le projet</DialogTitle>
+            <DialogTitle>{isEditMode ? 'Modifier le projet' : 'Créer un nouveau projet'}</DialogTitle>
           </DialogHeader>
           <ProjectForm
             initialData={currentProject || undefined}
-            onSubmit={handleUpdateProject}
+            onSubmit={isEditMode ? handleUpdateProject : handleCreateProject}
             onCancel={handleCloseDialog}
             projectManagers={projectManagers}
           />

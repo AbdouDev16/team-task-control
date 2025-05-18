@@ -1,104 +1,59 @@
 
 import { useState } from 'react';
-import { Task, Project, TaskStatus } from '@/types';
+import { Task, Project, Employee } from '@/types';
 import { taskService, projectService, userService } from '@/services/api';
 import { toast } from 'sonner';
 
-interface TaskWithDetails extends Task {
-  projet_nom?: string;
-  employe_nom?: string;
-  employe_prenom?: string;
+interface UseTasksDataProps {
+  isEmployee: boolean;
+  apiAvailable: boolean;
 }
 
-export const useTasksData = (isEmployee: boolean) => {
-  const [tasks, setTasks] = useState<TaskWithDetails[]>([]);
+export const useTasksData = ({ isEmployee, apiAvailable }: UseTasksDataProps) => {
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [employees, setEmployees] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const loadTasks = async () => {
+  const loadTasksData = async () => {
+    if (!apiAvailable) {
+      console.log("API indisponible, chargement des tâches annulé");
+      return;
+    }
+
+    setLoading(true);
+    
     try {
-      setLoading(true);
-      let response;
-      
-      // Si l'utilisateur est un employé, charger uniquement ses tâches
-      if (isEmployee) {
-        // Récupérer l'ID de l'employé connecté depuis le contexte d'authentification
-        // Cette valeur devrait être dans le contexte d'authentification
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const employeeId = user.details?.id;
-        
-        if (employeeId) {
-          response = await taskService.getByEmployee(employeeId);
-        } else {
-          toast.error("Impossible d'identifier l'employé connecté");
-          setLoading(false);
-          return;
-        }
-      } else {
-        // Sinon, charger toutes les tâches
-        response = await taskService.getAll();
+      // Charger les tâches
+      const tasksResponse = await taskService.getAll();
+      if (tasksResponse.tasks) {
+        setTasks(tasksResponse.tasks);
       }
       
-      if (response.tasks) {
-        setTasks(response.tasks);
-      } else {
-        setTasks([]);
+      // Charger les projets
+      const projectsResponse = await projectService.getAll();
+      if (projectsResponse.projects) {
+        setProjects(projectsResponse.projects);
+      }
+      
+      // Charger les employés
+      const usersResponse = await userService.getAll();
+      if (usersResponse.users) {
+        const employeeUsers = usersResponse.users
+          .filter((user: any) => user.role === 'Employé')
+          .map((user: any) => user.details);
+        
+        setEmployees(employeeUsers);
       }
     } catch (error) {
-      console.error('Failed to load tasks:', error);
-      toast.error('Impossible de charger les tâches. Veuillez réessayer.');
+      console.error('Error loading tasks data:', error);
+      toast.error('Impossible de charger les données des tâches');
       setTasks([]);
+      setProjects([]);
+      setEmployees([]);
     } finally {
       setLoading(false);
     }
-  };
-
-  const loadProjects = async () => {
-    try {
-      const response = await projectService.getAll();
-      if (response.projects) {
-        setProjects(response.projects);
-      } else {
-        setProjects([]);
-      }
-    } catch (error) {
-      console.error('Failed to load projects:', error);
-      toast.error('Impossible de charger les projets. Veuillez réessayer.');
-      setProjects([]);
-    }
-  };
-
-  const loadEmployees = async () => {
-    try {
-      const response = await userService.getAll();
-      if (response.users) {
-        const employees = response.users
-          .filter((u: any) => u.role === 'Employé')
-          .map((u: any) => ({
-            id: u.details.id,
-            nom: u.details.nom,
-            prenom: u.details.prenom
-          }));
-        setEmployees(employees);
-      } else {
-        setEmployees([]);
-      }
-    } catch (error) {
-      console.error('Failed to load employees:', error);
-      toast.error('Impossible de charger les employés. Veuillez réessayer.');
-      setEmployees([]);
-    }
-  };
-
-  const loadTasksData = async () => {
-    setLoading(true);
-    await Promise.all([
-      loadTasks(),
-      loadProjects(),
-      loadEmployees()
-    ]);
-    setLoading(false);
   };
 
   return {
@@ -106,6 +61,7 @@ export const useTasksData = (isEmployee: boolean) => {
     projects,
     employees,
     loading,
+    setLoading,
     setTasks,
     setProjects,
     setEmployees,

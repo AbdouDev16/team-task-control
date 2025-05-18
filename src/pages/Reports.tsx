@@ -3,170 +3,62 @@ import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { useAuth } from '@/context/AuthContext';
-import { reportService } from '@/services/api';
-import { toast } from 'sonner';
+import { useReportsService } from '@/hooks/reports';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { FilePlus, FileEdit, Trash2, Search } from 'lucide-react';
+import ReportForm from '@/components/forms/ReportForm';
 import { Report } from '@/types';
-import { 
-  ReportsHeader, 
-  ReportsSearch, 
-  ReportsList, 
-  DeleteReportDialog 
-} from '@/components/reports';
 
 const Reports = () => {
-  const { user, apiAvailable } = useAuth();
-  const [reports, setReports] = useState<Report[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { apiAvailable, user } = useAuth();
+  const [searchTerm, setSearchTerm] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentReport, setCurrentReport] = useState<Report | null>(null);
   const [reportToDelete, setReportToDelete] = useState<number | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  const isProjectManager = user?.role === 'Chef_Projet';
-  const isManagerOrAdmin = user?.role === 'Gérant' || user?.role === 'Admin';
-  const canCreateReports = isProjectManager || isManagerOrAdmin;
 
-  useEffect(() => {
-    if (apiAvailable) {
-      loadReports();
-    } else {
-      loadMockReports();
-    }
-  }, [apiAvailable]);
+  const {
+    reports,
+    loading,
+    canCreateReport,
+    createReport,
+    updateReport,
+    deleteReport
+  } = useReportsService();
 
-  const loadReports = async () => {
-    try {
-      setLoading(true);
-      const response = await reportService.getAll();
-      if (response.reports) {
-        setReports(response.reports);
-      }
-      setLoading(false);
-    } catch (error) {
-      console.error('Failed to load reports:', error);
-      toast.error('Impossible de charger les rapports');
-      setLoading(false);
-      loadMockReports();
-    }
-  };
-
-  const loadMockReports = () => {
-    const mockReports = [
-      {
-        id: 1,
-        titre: 'Rapport d\'avancement CRM',
-        contenu: 'Le projet CRM avance selon le planning prévu. La phase de conception de la base de données est terminée.',
-        date_creation: '2025-05-05T14:30:00',
-        chef_projet_id: 1
-      },
-      {
-        id: 2,
-        titre: 'Tests de performance mobile',
-        contenu: 'Les tests de performance de l\'application mobile montrent des résultats satisfaisants. Quelques optimisations sont nécessaires.',
-        date_creation: '2025-05-03T10:15:00',
-        chef_projet_id: 2
-      },
-      {
-        id: 3,
-        titre: 'Revue de code mensuelle',
-        contenu: 'La revue de code du mois de mai a révélé quelques problèmes de sécurité mineurs qui ont été corrigés.',
-        date_creation: '2025-05-01T16:45:00',
-        chef_projet_id: 1
-      }
-    ];
-    setReports(mockReports);
-    setLoading(false);
-  };
-  
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', { 
-      day: '2-digit',
-      month: '2-digit', 
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  // Filtrer les rapports par le terme de recherche
+  const filteredReports = reports.filter(report => 
+    report.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    report.contenu.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleCreateReport = async (formData: any) => {
-    try {
-      if (apiAvailable) {
-        const response = await reportService.create(formData);
-        // Ajouter le rapport
-        setReports([...reports, response.report]);
-      } else {
-        // Simulation en mode développement
-        const now = new Date();
-        const newReport = {
-          id: reports.length + 1,
-          titre: formData.titre,
-          contenu: formData.contenu,
-          date_creation: now.toISOString(),
-          chef_projet_id: user?.id || 1
-        };
-        setReports([...reports, newReport]);
-      }
-      toast.success("Rapport créé avec succès");
+    const success = await createReport(formData);
+    if (success) {
       setOpenDialog(false);
-    } catch (error) {
-      console.error('Error creating report:', error);
-      toast.error("Erreur lors de la création du rapport");
-      throw error;
     }
   };
 
   const handleUpdateReport = async (formData: any) => {
-    try {
-      if (!currentReport) return;
-      
-      if (apiAvailable) {
-        const response = await reportService.update(currentReport.id, formData);
-        // Mettre à jour le rapport
-        setReports(reports.map(r => r.id === currentReport.id ? response.report : r));
-      } else {
-        // Simulation en mode développement
-        setReports(reports.map(r => r.id === currentReport.id ? {
-          ...r,
-          titre: formData.titre,
-          contenu: formData.contenu
-        } : r));
-      }
-      
-      toast.success("Rapport mis à jour avec succès");
+    if (!currentReport) return;
+    const success = await updateReport(currentReport.id, formData);
+    if (success) {
       setOpenDialog(false);
       setCurrentReport(null);
       setIsEditMode(false);
-    } catch (error) {
-      console.error('Error updating report:', error);
-      toast.error("Erreur lors de la mise à jour du rapport");
-      throw error;
     }
   };
 
-  const handleDelete = (id: number) => {
-    setReportToDelete(id);
-  };
-
-  const confirmDelete = async () => {
-    if (!reportToDelete) return;
-    
-    try {
-      setLoading(true);
-      if (apiAvailable) {
-        await reportService.delete(reportToDelete);
+  const handleDeleteReport = async (reportId: number) => {
+    const confirmed = window.confirm("Êtes-vous sûr de vouloir supprimer ce rapport ?");
+    if (confirmed) {
+      const success = await deleteReport(reportId);
+      if (success) {
+        setReportToDelete(null);
       }
-      
-      // Mise à jour de l'UI
-      setReports(reports.filter(r => r.id !== reportToDelete));
-      toast.success("Rapport supprimé avec succès");
-    } catch (error) {
-      console.error('Failed to delete report:', error);
-      toast.error("Erreur lors de la suppression du rapport");
-    } finally {
-      setLoading(false);
-      setReportToDelete(null);
     }
   };
 
@@ -176,16 +68,20 @@ const Reports = () => {
     setOpenDialog(true);
   };
 
-  const handleOpenDialog = () => {
-    setIsEditMode(false);
-    setCurrentReport(null);
-    setOpenDialog(true);
-  };
-
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setCurrentReport(null);
     setIsEditMode(false);
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric'
+    });
   };
 
   return (
@@ -194,43 +90,88 @@ const Reports = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header title="Rapports" />
         <div className="flex-1 overflow-auto p-6">
-          <ReportsHeader
-            title="Rapports de projets"
-            openDialog={openDialog}
-            setOpenDialog={setOpenDialog}
-            isEditMode={isEditMode}
-            currentReport={currentReport}
-            handleOpenDialog={handleOpenDialog}
-            handleCreateReport={handleCreateReport}
-            handleUpdateReport={handleUpdateReport}
-            handleCloseDialog={handleCloseDialog}
-            canCreateReports={canCreateReports}
-          />
-          
-          <ReportsSearch 
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-          />
+          {/* Header avec bouton pour créer un rapport */}
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">Rapports</h2>
+            {canCreateReport && (
+              <Button onClick={() => { setIsEditMode(false); setOpenDialog(true); }}>
+                <FilePlus className="mr-2 h-4 w-4" /> Nouveau rapport
+              </Button>
+            )}
+          </div>
 
-          <ReportsList 
-            reports={reports}
-            loading={loading}
-            isManagerOrAdmin={isManagerOrAdmin}
-            isProjectManager={isProjectManager}
-            userId={user?.id}
-            formatDate={formatDate}
-            handleEditReport={handleEditReport}
-            handleDelete={handleDelete}
-            searchTerm={searchTerm}
-          />
+          {/* Barre de recherche */}
+          <div className="relative mb-6">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+            <Input
+              className="pl-10"
+              placeholder="Rechercher un rapport..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {/* Liste des rapports */}
+          {loading ? (
+            <div className="text-center p-8">Chargement des rapports...</div>
+          ) : filteredReports.length === 0 ? (
+            <div className="text-center p-8">
+              {searchTerm ? 'Aucun rapport correspondant à votre recherche' : 'Aucun rapport disponible'}
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {filteredReports.map((report) => (
+                <Card key={report.id}>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle>{report.titre}</CardTitle>
+                        <CardDescription>
+                          Par {report.chef_projet_nom} {report.chef_projet_prenom} • {formatDate(report.date_creation)}
+                        </CardDescription>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => handleEditReport(report)}
+                        >
+                          <FileEdit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          className="text-destructive" 
+                          onClick={() => handleDeleteReport(report.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="line-clamp-3">{report.contenu}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       
-      <DeleteReportDialog 
-        reportToDelete={reportToDelete}
-        setReportToDelete={setReportToDelete}
-        confirmDelete={confirmDelete}
-      />
+      {/* Dialog pour créer/modifier un rapport */}
+      <Dialog open={openDialog} onOpenChange={handleCloseDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{isEditMode ? 'Modifier le rapport' : 'Créer un nouveau rapport'}</DialogTitle>
+          </DialogHeader>
+          <ReportForm
+            initialData={currentReport || undefined}
+            onSubmit={isEditMode ? handleUpdateReport : handleCreateReport}
+            onCancel={handleCloseDialog}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

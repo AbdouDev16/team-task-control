@@ -1,5 +1,5 @@
 
-import { User, Project, Task, Report } from '../types';
+import { User, Project, Task, Report } from '@/types';
 import { toast } from 'sonner';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost/api'; 

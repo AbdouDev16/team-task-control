@@ -1,17 +1,8 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { User } from '@/types';
+import { User, AuthContextType } from '@/types';
 import { authService } from '@/services/api';
-
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  error: string | null;
-  login: (username: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  isAuthenticated: boolean;
-  apiAvailable: boolean;
-}
+import { toast } from 'sonner';
 
 const AuthContext = createContext<AuthContextType>(null!);
 

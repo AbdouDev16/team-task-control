@@ -5,7 +5,7 @@ import { useProjectsData } from './useProjectsData';
 import { useProjectActions } from './useProjectActions';
 
 export function useProjectsService() {
-  const { user } = useAuth();
+  const { user, apiAvailable } = useAuth();
   const [loading, setLoading] = useState(false);
   
   const canModifyProject = user?.role === 'Admin' || user?.role === 'Gérant';
@@ -19,7 +19,7 @@ export function useProjectsService() {
     loadProjects,
     loadProjectManagers
   } = useProjectsData({
-    apiAvailable: true,
+    apiAvailable,
     isEmployee
   });
 
@@ -28,7 +28,7 @@ export function useProjectsService() {
     updateProject,
     deleteProject
   } = useProjectActions({
-    apiAvailable: true,
+    apiAvailable,
     projects,
     projectManagers,
     setProjects,
@@ -39,7 +39,7 @@ export function useProjectsService() {
   useEffect(() => {
     loadProjects();
     loadProjectManagers();
-  }, [user]);
+  }, [user, apiAvailable]);
 
   return {
     projects,

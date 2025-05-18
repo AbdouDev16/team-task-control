@@ -9,18 +9,25 @@ interface UseReportsActionsProps {
   setReports: Dispatch<SetStateAction<Report[]>>;
   canCreateReport: boolean;
   setLoading: Dispatch<SetStateAction<boolean>>;
+  apiAvailable: boolean;
 }
 
 export const useReportsActions = ({
   reports,
   setReports,
   canCreateReport,
-  setLoading
+  setLoading,
+  apiAvailable
 }: UseReportsActionsProps) => {
   
   const createReport = async (formData: any) => {
     if (!canCreateReport) {
       toast.error('Vous n\'avez pas les permissions pour créer un rapport');
+      return false;
+    }
+
+    if (!apiAvailable) {
+      toast.error('API indisponible. Impossible de créer un rapport.');
       return false;
     }
     
@@ -44,6 +51,11 @@ export const useReportsActions = ({
   };
   
   const updateReport = async (reportId: number, formData: any) => {
+    if (!apiAvailable) {
+      toast.error('API indisponible. Impossible de mettre à jour le rapport.');
+      return false;
+    }
+
     try {
       setLoading(true);
       const response = await reportService.update(reportId, formData);
@@ -64,6 +76,11 @@ export const useReportsActions = ({
   };
   
   const deleteReport = async (reportId: number) => {
+    if (!apiAvailable) {
+      toast.error('API indisponible. Impossible de supprimer le rapport.');
+      return false;
+    }
+
     try {
       setLoading(true);
       await reportService.delete(reportId);

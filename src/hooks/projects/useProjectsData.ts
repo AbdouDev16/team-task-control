@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { projectService, userService } from '@/services/api';
 import { toast } from 'sonner';
-import { ProjectWithProgress, ProjectManager } from './types';
+import { ProjectWithProgress, ProjectManager } from '@/types';
 
 interface UseProjectsDataProps {
   apiAvailable: boolean;
@@ -14,12 +14,12 @@ export function useProjectsData({ apiAvailable, isEmployee }: UseProjectsDataPro
   const [projectManagers, setProjectManagers] = useState<ProjectManager[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadProjects();
-    loadProjectManagers();
-  }, [apiAvailable]);
-
   const loadProjects = async () => {
+    if (!apiAvailable) {
+      console.log("API indisponible, chargement des projets annulé");
+      return;
+    }
+
     try {
       setLoading(true);
       const response = await projectService.getAll();
@@ -42,15 +42,30 @@ export function useProjectsData({ apiAvailable, isEmployee }: UseProjectsDataPro
     }
   };
 
-  // Fonction pour calculer la progression d'un projet (peut être améliorée plus tard)
+  // Fonction pour calculer la progression d'un projet
   const calculateProjectProgress = (project: any): number => {
-    // Pour l'instant, on utilise une valeur aléatoire
-    // Dans une implémentation réelle, cette valeur devrait être basée sur 
-    // la proportion de tâches terminées par rapport au total des tâches
+    // Si le projet contient déjà des tâches
+    if (project.tasks && Array.isArray(project.tasks)) {
+      const totalTasks = project.tasks.length;
+      if (totalTasks === 0) return 0;
+      
+      const completedTasks = project.tasks.filter(
+        (task: any) => task.statut === 'Terminé'
+      ).length;
+      
+      return Math.floor((completedTasks / totalTasks) * 100);
+    }
+    
+    // Sinon, on utilise une valeur aléatoire (à remplacer par une vraie logique)
     return Math.floor(Math.random() * 100);
   };
 
   const loadProjectManagers = async () => {
+    if (!apiAvailable) {
+      console.log("API indisponible, chargement des chefs de projet annulé");
+      return;
+    }
+
     try {
       // Récupérer la liste des chefs de projet
       const response = await userService.getAll();

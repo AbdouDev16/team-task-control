@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { Report } from '@/types';
-import FormWrapper from './FormWrapper';
 import { toast } from 'sonner';
 
 interface ReportFormData {
@@ -49,20 +49,16 @@ const ReportForm = ({ initialData, onSubmit, onCancel }: ReportFormProps) => {
     try {
       setIsSubmitting(true);
       await onSubmit(formData);
-      setIsSubmitting(false);
     } catch (error) {
-      setIsSubmitting(false);
       console.error('Error submitting report form:', error);
       toast.error("Une erreur s'est produite lors de l'enregistrement du rapport");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <FormWrapper 
-      isSubmitting={isSubmitting} 
-      onSubmit={handleSubmit} 
-      onCancel={onCancel}
-    >
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4">
         <div className="grid gap-2">
           <Label htmlFor="titre">Titre du rapport</Label>
@@ -87,7 +83,16 @@ const ReportForm = ({ initialData, onSubmit, onCancel }: ReportFormProps) => {
           />
         </div>
       </div>
-    </FormWrapper>
+      
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Annuler
+        </Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Enregistrement...' : initialData?.id ? 'Mettre à jour' : 'Créer'}
+        </Button>
+      </div>
+    </form>
   );
 };
 
