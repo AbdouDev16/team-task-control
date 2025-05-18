@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { projectService, userService } from '@/services/api';
-import { Project } from '@/types';
 import { toast } from 'sonner';
 import { ProjectWithProgress, ProjectManager } from './types';
 
@@ -16,12 +15,8 @@ export function useProjectsData({ apiAvailable, isEmployee }: UseProjectsDataPro
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (apiAvailable) {
-      loadProjects();
-      loadProjectManagers();
-    } else {
-      loadMockData();
-    }
+    loadProjects();
+    loadProjectManagers();
   }, [apiAvailable]);
 
   const loadProjects = async () => {
@@ -29,26 +24,35 @@ export function useProjectsData({ apiAvailable, isEmployee }: UseProjectsDataPro
       setLoading(true);
       const response = await projectService.getAll();
       if (response.projects) {
-        // Ajouter une valeur de progression simulée pour chaque projet
+        // Ajouter une valeur de progression calculée pour chaque projet
         const projectsWithProgress = response.projects.map((project: any) => ({
           ...project,
-          progress: Math.floor(Math.random() * 100)
+          progress: calculateProjectProgress(project)
         }));
         setProjects(projectsWithProgress);
+      } else {
+        setProjects([]);
       }
-      setLoading(false);
     } catch (error) {
       console.error('Failed to load projects:', error);
-      toast.error('Impossible de charger les projets');
+      toast.error('Impossible de charger les projets. Veuillez réessayer.');
+      setProjects([]);
+    } finally {
       setLoading(false);
-      loadMockData();
     }
+  };
+
+  // Fonction pour calculer la progression d'un projet (peut être améliorée plus tard)
+  const calculateProjectProgress = (project: any): number => {
+    // Pour l'instant, on utilise une valeur aléatoire
+    // Dans une implémentation réelle, cette valeur devrait être basée sur 
+    // la proportion de tâches terminées par rapport au total des tâches
+    return Math.floor(Math.random() * 100);
   };
 
   const loadProjectManagers = async () => {
     try {
-      // En situation réelle, ce serait une API spécifique pour les chefs de projet
-      // Mais ici on utilise la liste des utilisateurs et on filtre
+      // Récupérer la liste des chefs de projet
       const response = await userService.getAll();
       if (response.users) {
         const managers = response.users
@@ -59,75 +63,14 @@ export function useProjectsData({ apiAvailable, isEmployee }: UseProjectsDataPro
             prenom: u.details.prenom
           }));
         setProjectManagers(managers);
+      } else {
+        setProjectManagers([]);
       }
     } catch (error) {
       console.error('Failed to load project managers:', error);
-      // Charger des données mockées pour les chefs de projet
-      const mockManagers = [
-        { id: 1, nom: 'Bernard', prenom: 'Sophie' },
-        { id: 2, nom: 'Petit', prenom: 'Antoine' }
-      ];
-      setProjectManagers(mockManagers);
+      toast.error('Impossible de charger les chefs de projet. Veuillez réessayer.');
+      setProjectManagers([]);
     }
-  };
-
-  const loadMockData = () => {
-    // Utilisation des données mockées pour le développement
-    const mockProjects = [
-      {
-        id: 1,
-        nom: 'CRM Entreprise',
-        description: 'Système de gestion de la relation client pour PME',
-        chef_projet_id: 1,
-        chef_projet_nom: 'Bernard',
-        chef_projet_prenom: 'Sophie',
-        date_debut: '2025-05-01',
-        date_fin: '2025-07-30',
-        progress: 30
-      },
-      {
-        id: 2,
-        nom: 'Application Mobile',
-        description: 'Application mobile de suivi de stock pour entrepôts',
-        chef_projet_id: 2,
-        chef_projet_nom: 'Petit',
-        chef_projet_prenom: 'Antoine',
-        date_debut: '2025-04-15',
-        date_fin: '2025-06-15',
-        progress: 75
-      },
-      {
-        id: 3,
-        nom: 'Site E-commerce',
-        description: 'Plateforme de vente en ligne pour une boutique de vêtements',
-        chef_projet_id: 1,
-        chef_projet_nom: 'Bernard',
-        chef_projet_prenom: 'Sophie',
-        date_debut: '2025-06-01',
-        date_fin: '2025-09-01',
-        progress: 10
-      },
-      {
-        id: 4,
-        nom: 'Dashboard Analytics',
-        description: 'Tableau de bord pour analyse de données commerciales',
-        chef_projet_id: 2,
-        chef_projet_nom: 'Petit',
-        chef_projet_prenom: 'Antoine',
-        date_debut: '2025-05-20',
-        date_fin: '2025-06-30',
-        progress: 45
-      }
-    ];
-    
-    const mockManagers = [
-      { id: 1, nom: 'Bernard', prenom: 'Sophie' },
-      { id: 2, nom: 'Petit', prenom: 'Antoine' }
-    ];
-    
-    setProjects(mockProjects);
-    setProjectManagers(mockManagers);
-    setLoading(false);
   };
 
   return {
@@ -138,7 +81,6 @@ export function useProjectsData({ apiAvailable, isEmployee }: UseProjectsDataPro
     setProjectManagers,
     setLoading,
     loadProjects,
-    loadProjectManagers,
-    loadMockData
+    loadProjectManagers
   };
 }

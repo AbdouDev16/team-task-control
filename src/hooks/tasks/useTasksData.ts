@@ -14,26 +14,43 @@ export const useTasksData = (isEmployee: boolean) => {
   const [tasks, setTasks] = useState<TaskWithDetails[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const loadTasks = async () => {
     try {
+      setLoading(true);
       let response;
+      
+      // Si l'utilisateur est un employé, charger uniquement ses tâches
       if (isEmployee) {
-        // Si l'utilisateur est un employé, ne charger que ses tâches
-        // Simuler l'id d'employé à 4 pour le développement
-        const employeeId = 4; // En production, il faudrait obtenir l'ID réel de l'employé
-        response = await taskService.getByEmployee(employeeId);
+        // Récupérer l'ID de l'employé connecté depuis le contexte d'authentification
+        // Cette valeur devrait être dans le contexte d'authentification
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const employeeId = user.details?.id;
+        
+        if (employeeId) {
+          response = await taskService.getByEmployee(employeeId);
+        } else {
+          toast.error("Impossible d'identifier l'employé connecté");
+          setLoading(false);
+          return;
+        }
       } else {
+        // Sinon, charger toutes les tâches
         response = await taskService.getAll();
       }
       
       if (response.tasks) {
         setTasks(response.tasks);
+      } else {
+        setTasks([]);
       }
     } catch (error) {
       console.error('Failed to load tasks:', error);
-      toast.error('Impossible de charger les tâches');
-      // Ne pas charger les données mockées ici, cela sera fait dans la fonction loadMockData
+      toast.error('Impossible de charger les tâches. Veuillez réessayer.');
+      setTasks([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -42,10 +59,13 @@ export const useTasksData = (isEmployee: boolean) => {
       const response = await projectService.getAll();
       if (response.projects) {
         setProjects(response.projects);
+      } else {
+        setProjects([]);
       }
     } catch (error) {
       console.error('Failed to load projects:', error);
-      // Utiliser des données mockées pour les projets
+      toast.error('Impossible de charger les projets. Veuillez réessayer.');
+      setProjects([]);
     }
   };
 
@@ -61,132 +81,34 @@ export const useTasksData = (isEmployee: boolean) => {
             prenom: u.details.prenom
           }));
         setEmployees(employees);
+      } else {
+        setEmployees([]);
       }
     } catch (error) {
       console.error('Failed to load employees:', error);
-      // Charger des données mockées pour les employés
+      toast.error('Impossible de charger les employés. Veuillez réessayer.');
+      setEmployees([]);
     }
   };
 
   const loadTasksData = async () => {
-    await loadTasks();
-    await loadProjects();
-    await loadEmployees();
-  };
-
-  const loadMockData = () => {
-    // Utilisation des données mockées pour le développement
-    const mockTasks = [
-      {
-        id: 1,
-        nom: 'Conception de la base de données',
-        description: 'Création du schéma de base de données pour le projet CRM',
-        projet_id: 1,
-        projet_nom: 'CRM Entreprise',
-        employe_id: 3,
-        employe_nom: 'Durand',
-        employe_prenom: 'Emma',
-        statut: 'En cours' as TaskStatus,
-        date_debut: '2025-05-01',
-        date_fin: '2025-05-15'
-      },
-      {
-        id: 2,
-        nom: 'Développement Front-end',
-        description: 'Création de l\'interface utilisateur avec React',
-        projet_id: 1,
-        projet_nom: 'CRM Entreprise',
-        employe_id: 4,
-        employe_nom: 'Leroy',
-        employe_prenom: 'Thomas',
-        statut: 'Non commencé' as TaskStatus,
-        date_debut: '2025-05-16',
-        date_fin: '2025-05-30'
-      },
-      {
-        id: 3,
-        nom: 'Tests unitaires',
-        description: 'Création des tests unitaires pour les différentes fonctionnalités',
-        projet_id: 2,
-        projet_nom: 'Application Mobile',
-        employe_id: 5,
-        employe_nom: 'Moreau',
-        employe_prenom: 'Julie',
-        statut: 'Terminé' as TaskStatus,
-        date_debut: '2025-04-20',
-        date_fin: '2025-04-30'
-      },
-      {
-        id: 4,
-        nom: 'Intégration API',
-        description: 'Connexion du frontend avec les points d\'API backend',
-        projet_id: 1,
-        projet_nom: 'CRM Entreprise',
-        employe_id: 3,
-        employe_nom: 'Durand',
-        employe_prenom: 'Emma',
-        statut: 'Non commencé' as TaskStatus,
-        date_debut: '2025-06-01',
-        date_fin: '2025-06-15'
-      },
-      {
-        id: 5,
-        nom: 'Design UI mobile',
-        description: 'Création des maquettes pour l\'application mobile',
-        projet_id: 2,
-        projet_nom: 'Application Mobile',
-        employe_id: 4,
-        employe_nom: 'Leroy',
-        employe_prenom: 'Thomas',
-        statut: 'En cours' as TaskStatus,
-        date_debut: '2025-05-05',
-        date_fin: '2025-05-20'
-      }
-    ];
-    
-    const mockProjects = [
-      {
-        id: 1,
-        nom: 'CRM Entreprise',
-        description: 'Système de gestion de la relation client pour PME',
-        chef_projet_id: 2,
-        date_debut: '2025-05-01',
-        date_fin: '2025-07-30'
-      },
-      {
-        id: 2,
-        nom: 'Application Mobile',
-        description: 'Application mobile de suivi de stock pour entrepôts',
-        chef_projet_id: 3,
-        date_debut: '2025-04-15',
-        date_fin: '2025-06-15'
-      }
-    ];
-    
-    const mockEmployees = [
-      { id: 3, nom: 'Durand', prenom: 'Emma' },
-      { id: 4, nom: 'Leroy', prenom: 'Thomas' },
-      { id: 5, nom: 'Moreau', prenom: 'Julie' }
-    ];
-    
-    // Si l'utilisateur est un employé, ne montrer que ses tâches (simuler avec l'ID 4)
-    const filteredTasks = isEmployee 
-      ? mockTasks.filter(task => task.employe_id === 4)
-      : mockTasks;
-    
-    setTasks(filteredTasks);
-    setProjects(mockProjects);
-    setEmployees(mockEmployees);
+    setLoading(true);
+    await Promise.all([
+      loadTasks(),
+      loadProjects(),
+      loadEmployees()
+    ]);
+    setLoading(false);
   };
 
   return {
     tasks,
     projects,
     employees,
+    loading,
     setTasks,
     setProjects,
     setEmployees,
-    loadTasksData,
-    loadMockData
+    loadTasksData
   };
 };

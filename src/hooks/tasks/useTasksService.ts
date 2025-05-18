@@ -6,7 +6,7 @@ import { useTasksData } from './useTasksData';
 import { useTaskActions } from './useTaskActions';
 
 export const useTasksService = () => {
-  const { user, apiAvailable } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   
   const isEmployee = user?.role === 'Employé';
@@ -19,8 +19,7 @@ export const useTasksService = () => {
     setTasks,
     setProjects,
     setEmployees,
-    loadTasksData,
-    loadMockData
+    loadTasksData
   } = useTasksData(isEmployee);
 
   const {
@@ -29,7 +28,7 @@ export const useTasksService = () => {
     updateTaskStatus,
     deleteTask
   } = useTaskActions({
-    apiAvailable,
+    apiAvailable: true,
     tasks,
     projects,
     employees,
@@ -39,12 +38,8 @@ export const useTasksService = () => {
   });
 
   useEffect(() => {
-    if (apiAvailable) {
-      loadTasksData();
-    } else {
-      loadMockData();
-    }
-  }, [apiAvailable]);
+    loadTasksData();
+  }, [user]);
 
   return {
     tasks,

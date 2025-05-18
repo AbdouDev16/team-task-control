@@ -1,24 +1,25 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useProjectsData } from './useProjectsData';
 import { useProjectActions } from './useProjectActions';
-import { ProjectWithProgress, ProjectManager } from './types';
 
-export function useProjectsService(apiAvailable: boolean) {
+export function useProjectsService() {
   const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  
   const canModifyProject = user?.role === 'Admin' || user?.role === 'Gérant';
   const isEmployee = user?.role === 'Employé';
 
   const {
     projects,
     projectManagers,
-    loading,
     setProjects,
     setProjectManagers,
-    setLoading
+    loadProjects,
+    loadProjectManagers
   } = useProjectsData({
-    apiAvailable,
+    apiAvailable: true,
     isEmployee
   });
 
@@ -27,13 +28,18 @@ export function useProjectsService(apiAvailable: boolean) {
     updateProject,
     deleteProject
   } = useProjectActions({
-    apiAvailable,
+    apiAvailable: true,
     projects,
     projectManagers,
     setProjects,
     canModifyProject,
     setLoading
   });
+
+  useEffect(() => {
+    loadProjects();
+    loadProjectManagers();
+  }, [user]);
 
   return {
     projects,
