@@ -31,6 +31,10 @@ const Projects = () => {
     canModifyProject
   } = useProjectsService();
 
+  console.log("Current user role:", user?.role);
+  console.log("Can modify project:", canModifyProject);
+  console.log("Project managers:", projectManagers);
+
   // Filtre et tri des projets
   const filteredAndSortedProjects = projects
     .filter(project => {
@@ -62,7 +66,9 @@ const Projects = () => {
     });
 
   const handleCreateProject = async (formData: any) => {
+    console.log("Handling project creation with data:", formData);
     const success = await createProject(formData);
+    console.log("Project creation result:", success);
     if (success) {
       setOpenDialog(false);
     }
@@ -106,7 +112,11 @@ const Projects = () => {
         <Header title="Projets" />
         <div className="flex-1 overflow-auto p-6">
           <ProjectsHeader 
-            onCreateClick={() => { setIsEditMode(false); setOpenDialog(true); }}
+            onCreateClick={() => { 
+              console.log("Create project button clicked, canModify:", canModifyProject);
+              setIsEditMode(false); 
+              setOpenDialog(true); 
+            }}
             canModifyProject={canModifyProject}
           />
           

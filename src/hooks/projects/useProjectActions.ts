@@ -34,14 +34,19 @@ export const useProjectActions = ({
     
     try {
       setLoading(true);
+      console.log('Creating project with data:', formData);
       const response = await projectService.create(formData);
+      console.log('Project creation response:', response);
       
-      if (response.project) {
+      if (response && response.project) {
         setProjects([...projects, { ...response.project, progress: 0 }]);
         toast.success('Projet créé avec succès');
         return true;
+      } else {
+        console.error('Invalid response format:', response);
+        toast.error('Format de réponse invalide lors de la création du projet');
+        return false;
       }
-      return false;
     } catch (error) {
       console.error('Error creating project:', error);
       toast.error('Erreur lors de la création du projet');

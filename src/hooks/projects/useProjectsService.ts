@@ -8,8 +8,12 @@ export function useProjectsService() {
   const { user, apiAvailable } = useAuth();
   const [loading, setLoading] = useState(false);
   
+  // Fix here: make sure we're correctly identifying admin and manager roles
   const canModifyProject = user?.role === 'Admin' || user?.role === 'Gérant';
   const isEmployee = user?.role === 'Employé';
+
+  console.log('Current user role in useProjectsService:', user?.role);
+  console.log('Can modify project in useProjectsService:', canModifyProject);
 
   const {
     projects,

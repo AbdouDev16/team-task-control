@@ -63,12 +63,13 @@ const ProjectForm = ({ initialData, onSubmit, onCancel, projectManagers }: Proje
     
     try {
       setIsSubmitting(true);
+      console.log("Submitting project form with data:", formData);
       await onSubmit(formData);
-      setIsSubmitting(false);
     } catch (error) {
-      setIsSubmitting(false);
       console.error('Error submitting project form:', error);
       toast.error("Une erreur s'est produite lors de l'enregistrement du projet");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
