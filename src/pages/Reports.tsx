@@ -127,7 +127,7 @@ const Reports = () => {
                       <div>
                         <CardTitle>{report.titre}</CardTitle>
                         <CardDescription>
-                          Par {report.chef_projet_nom} {report.chef_projet_prenom} • {formatDate(report.date_creation)}
+                          Par {report.chef_projet_nom || 'Utilisateur'} {report.chef_projet_prenom || ''} • {formatDate(report.date_creation)}
                         </CardDescription>
                       </div>
                       <div className="flex space-x-2">

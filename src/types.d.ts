@@ -29,6 +29,18 @@ export interface Project {
   date_fin?: string;
 }
 
+export interface ProjectManager {
+  id: number;
+  nom: string;
+  prenom: string;
+}
+
+export interface ProjectWithProgress extends Project {
+  progress?: number;
+  chef_projet_nom?: string;
+  chef_projet_prenom?: string;
+}
+
 // Types pour les tâches
 export type TaskStatus = 'Non commencé' | 'En cours' | 'Terminé' | 'En retard';
 
@@ -43,6 +55,14 @@ export interface Task {
   date_fin?: string;
 }
 
+// Types pour les employés
+export interface Employee {
+  id: number;
+  user_id: number;
+  nom: string;
+  prenom: string;
+}
+
 // Types pour les rapports
 export interface Report {
   id: number;
@@ -50,4 +70,6 @@ export interface Report {
   contenu: string;
   date_creation: string;
   chef_projet_id: number;
+  chef_projet_nom?: string;
+  chef_projet_prenom?: string;
 }

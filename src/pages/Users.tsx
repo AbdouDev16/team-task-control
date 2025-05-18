@@ -63,7 +63,7 @@ const Users = () => {
   const getRoleBadgeVariant = (role: UserRole) => {
     switch (role) {
       case 'Admin': return 'destructive';
-      case 'Gérant': return 'warning';
+      case 'Gérant': return 'default'; // Changed from 'warning' to 'default'
       case 'Chef_Projet': return 'default';
       case 'Employé': return 'outline';
       default: return 'secondary';

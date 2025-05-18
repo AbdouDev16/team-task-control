@@ -1,68 +1,49 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { SelectValue, SelectTrigger, SelectItem, SelectContent, Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { CalendarIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { TaskStatus } from '@/types';
-
-interface Employee {
-  id: number;
-  nom: string;
-  prenom: string;
-}
-
-interface Project {
-  id: number;
-  nom: string;
-}
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Task, TaskStatus } from '@/types';
+import FormWrapper from './FormWrapper';
+import { toast } from 'sonner';
 
 interface TaskFormData {
   nom: string;
   description: string;
   projet_id: number;
-  employe_id: number;
+  employe_id?: number | null;
   statut: TaskStatus;
   date_debut: string;
   date_fin: string;
 }
 
 interface TaskFormProps {
-  initialData?: Partial<TaskFormData>;
-  employees: Employee[];
-  projects: Project[];
+  initialData?: Partial<Task>;
   onSubmit: (data: TaskFormData) => Promise<void>;
   onCancel: () => void;
+  projects: { id: number; nom: string }[];
+  employees: { id: number; nom: string; prenom: string }[];
+  selectedProjectId?: number;
 }
 
-const TaskForm = ({ initialData, employees, projects, onSubmit, onCancel }: TaskFormProps) => {
+const TaskForm = ({ 
+  initialData, 
+  onSubmit, 
+  onCancel, 
+  projects, 
+  employees,
+  selectedProjectId 
+}: TaskFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<TaskFormData>({
     nom: initialData?.nom || '',
     description: initialData?.description || '',
-    projet_id: initialData?.projet_id || 0,
-    employe_id: initialData?.employe_id || 0,
+    projet_id: selectedProjectId || initialData?.projet_id || 0,
+    employe_id: initialData?.employe_id || null,
     statut: initialData?.statut || 'Non commencé',
-    date_debut: initialData?.date_debut || '',
-    date_fin: initialData?.date_fin || '',
+    date_debut: initialData?.date_debut ? initialData.date_debut.substring(0, 10) : '',
+    date_fin: initialData?.date_fin ? initialData.date_fin.substring(0, 10) : ''
   });
-
-  const [startDate, setStartDate] = useState<Date | undefined>(
-    initialData?.date_debut ? new Date(initialData.date_debut) : undefined
-  );
-  const [endDate, setEndDate] = useState<Date | undefined>(
-    initialData?.date_fin ? new Date(initialData.date_fin) : undefined
-  );
-
-  // Status options
-  const taskStatusOptions: TaskStatus[] = ['Non commencé', 'En cours', 'Terminé', 'En retard'];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -73,55 +54,52 @@ const TaskForm = ({ initialData, employees, projects, onSubmit, onCancel }: Task
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData({
-      ...formData,
-      [name]: name === 'statut' ? value : Number(value)
-    });
+    if (name === 'projet_id' || name === 'employe_id') {
+      setFormData({
+        ...formData,
+        [name]: value ? parseInt(value) : null
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    }
   };
-
-  useEffect(() => {
-    if (startDate) {
-      setFormData(prev => ({
-        ...prev,
-        date_debut: format(startDate, 'yyyy-MM-dd')
-      }));
-    }
-  }, [startDate]);
-
-  useEffect(() => {
-    if (endDate) {
-      setFormData(prev => ({
-        ...prev,
-        date_fin: format(endDate, 'yyyy-MM-dd')
-      }));
-    }
-  }, [endDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation
-    if (!formData.nom || !formData.projet_id || !formData.employe_id) {
-      alert('Veuillez remplir tous les champs obligatoires');
+    if (!formData.nom) {
+      toast.error("Le nom de la tâche est requis");
+      return;
+    }
+    
+    if (!formData.projet_id) {
+      toast.error("Le projet est requis");
       return;
     }
     
     try {
       setIsSubmitting(true);
       await onSubmit(formData);
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      alert('Une erreur est survenue lors de l\'enregistrement de la tâche');
-    } finally {
       setIsSubmitting(false);
+    } catch (error) {
+      setIsSubmitting(false);
+      console.error('Error submitting task form:', error);
+      toast.error("Une erreur s'est produite lors de l'enregistrement de la tâche");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <FormWrapper 
+      isSubmitting={isSubmitting} 
+      onSubmit={handleSubmit} 
+      onCancel={onCancel}
+    >
       <div className="grid gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="nom">Nom de la tâche *</Label>
+          <Label htmlFor="nom">Nom de la tâche</Label>
           <Input
             id="nom"
             name="nom"
@@ -143,13 +121,14 @@ const TaskForm = ({ initialData, employees, projects, onSubmit, onCancel }: Task
         </div>
         
         <div className="grid gap-2">
-          <Label htmlFor="projet_id">Projet *</Label>
+          <Label htmlFor="projet_id">Projet</Label>
           <Select 
-            value={formData.projet_id.toString()} 
+            value={formData.projet_id ? formData.projet_id.toString() : ''} 
             onValueChange={(value) => handleSelectChange('projet_id', value)}
+            disabled={!!selectedProjectId}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Sélectionner un projet" />
+              <SelectValue placeholder="Sélectionnez un projet" />
             </SelectTrigger>
             <SelectContent>
               {projects.map((project) => (
@@ -162,15 +141,16 @@ const TaskForm = ({ initialData, employees, projects, onSubmit, onCancel }: Task
         </div>
         
         <div className="grid gap-2">
-          <Label htmlFor="employe_id">Assignée à *</Label>
+          <Label htmlFor="employe_id">Assigné à</Label>
           <Select 
-            value={formData.employe_id.toString()} 
+            value={formData.employe_id ? formData.employe_id.toString() : ''} 
             onValueChange={(value) => handleSelectChange('employe_id', value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Sélectionner un employé" />
+              <SelectValue placeholder="Sélectionnez un employé" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="">Non assigné</SelectItem>
               {employees.map((employee) => (
                 <SelectItem key={employee.id} value={employee.id.toString()}>
                   {employee.prenom} {employee.nom}
@@ -184,88 +164,43 @@ const TaskForm = ({ initialData, employees, projects, onSubmit, onCancel }: Task
           <Label htmlFor="statut">Statut</Label>
           <Select 
             value={formData.statut} 
-            onValueChange={(value) => handleSelectChange('statut', value as TaskStatus)}
+            onValueChange={(value) => handleSelectChange('statut', value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Sélectionner un statut" />
+              <SelectValue placeholder="Sélectionnez un statut" />
             </SelectTrigger>
             <SelectContent>
-              {taskStatusOptions.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status}
-                </SelectItem>
-              ))}
+              <SelectItem value="Non commencé">Non commencé</SelectItem>
+              <SelectItem value="En cours">En cours</SelectItem>
+              <SelectItem value="Terminé">Terminé</SelectItem>
+              <SelectItem value="En retard">En retard</SelectItem>
             </SelectContent>
           </Select>
         </div>
         
-        <div className="grid grid-cols-2 gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="date_debut">Date de début</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !startDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {startDate ? format(startDate, "PPP", { locale: fr }) : "Sélectionner"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={startDate}
-                  onSelect={setStartDate}
-                  locale={fr}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="date_fin">Date d'échéance</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !endDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {endDate ? format(endDate, "PPP", { locale: fr }) : "Sélectionner"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={endDate}
-                  onSelect={setEndDate}
-                  locale={fr}
-                  disabled={(date) => 
-                    startDate ? date < startDate : false
-                  }
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+        <div className="grid gap-2">
+          <Label htmlFor="date_debut">Date de début</Label>
+          <Input
+            id="date_debut"
+            name="date_debut"
+            type="date"
+            value={formData.date_debut}
+            onChange={handleChange}
+          />
+        </div>
+        
+        <div className="grid gap-2">
+          <Label htmlFor="date_fin">Date d'échéance</Label>
+          <Input
+            id="date_fin"
+            name="date_fin"
+            type="date"
+            value={formData.date_fin}
+            onChange={handleChange}
+          />
         </div>
       </div>
-      
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Annuler
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Enregistrement...' : initialData?.id ? 'Mettre à jour' : 'Créer'}
-        </Button>
-      </div>
-    </form>
+    </FormWrapper>
   );
 };
 

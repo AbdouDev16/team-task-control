@@ -1,3 +1,5 @@
 
 export { useProjectsService } from './useProjectsService';
-export type { ProjectWithProgress, ProjectManager } from './types';
+export { useProjectsData } from './useProjectsData';
+export { useProjectActions } from './useProjectActions';
+export type { ProjectWithProgress, ProjectManager } from '@/types';
