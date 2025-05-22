@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -112,11 +111,13 @@ const ProjectForm = ({ initialData, onSubmit, onCancel, projectManagers }: Proje
               <SelectValue placeholder="Sélectionnez un chef de projet" />
             </SelectTrigger>
             <SelectContent>
-              {projectManagers.map((manager) => (
-                <SelectItem key={manager.id} value={manager.id.toString()}>
-                  {manager.prenom} {manager.nom}
-                </SelectItem>
-              ))}
+              {Array.isArray(projectManagers) && projectManagers
+                .filter((manager) => manager && manager.id !== undefined)
+                .map((manager) => (
+                  <SelectItem key={manager.id} value={manager.id.toString()}>
+                    {manager.prenom} {manager.nom}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>

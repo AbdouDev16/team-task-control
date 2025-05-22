@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -55,10 +54,15 @@ const TaskForm = ({
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    if (name === 'projet_id' || name === 'employe_id') {
+    if (name === 'projet_id') {
       setFormData({
         ...formData,
         [name]: value ? parseInt(value) : null
+      });
+    } else if (name === 'employe_id') {
+      setFormData({
+        ...formData,
+        employe_id: value === '-1' ? null : parseInt(value)
       });
     } else {
       setFormData({
@@ -132,11 +136,13 @@ const TaskForm = ({
               <SelectValue placeholder="Sélectionnez un projet" />
             </SelectTrigger>
             <SelectContent>
-              {projects.map((project) => (
-                <SelectItem key={project.id} value={project.id.toString()}>
-                  {project.nom}
-                </SelectItem>
-              ))}
+              {Array.isArray(projects) && projects
+                .filter((project) => project && project.id !== undefined)
+                .map((project) => (
+                  <SelectItem key={project.id} value={project.id.toString()}>
+                    {project.nom}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
@@ -151,12 +157,14 @@ const TaskForm = ({
               <SelectValue placeholder="Sélectionnez un employé" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Non assigné</SelectItem>
-              {employees.map((employee) => (
-                <SelectItem key={employee.id} value={employee.id.toString()}>
-                  {employee.prenom} {employee.nom}
-                </SelectItem>
-              ))}
+              <SelectItem value="-1">Non assigné</SelectItem>
+              {Array.isArray(employees) && employees
+                .filter((employee) => employee && employee.id !== undefined)
+                .map((employee) => (
+                  <SelectItem key={employee.id} value={employee.id.toString()}>
+                    {employee.prenom} {employee.nom}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>

@@ -17,14 +17,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
       <h1 className="text-xl font-semibold">{title}</h1>
       
       <div className="flex items-center gap-4">
-        <div className="relative w-64 max-w-sm hidden sm:block">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            type="search" 
-            placeholder="Rechercher..." 
-            className="pl-8 h-9"
-          />
-        </div>
+       
         
         <Button variant="ghost" size="icon" className="relative">
           <Bell size={18} />

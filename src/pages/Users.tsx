@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
@@ -12,12 +11,17 @@ import { Badge } from '@/components/ui/badge';
 import { User, UserRole } from '@/types';
 import { Search, PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import UserForm from '@/components/forms/UserForm';
 
 const Users = () => {
   const { apiAvailable } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [openDialog, setOpenDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   useEffect(() => {
     if (apiAvailable) {
@@ -45,11 +49,30 @@ const Users = () => {
       try {
         await userService.delete(userId);
         toast.success('Utilisateur supprimé avec succès');
-        loadUsers(); // Reload users after deletion
+        loadUsers();
       } catch (error) {
         console.error('Error deleting user:', error);
         toast.error('Erreur lors de la suppression de l\'utilisateur');
       }
+    }
+  };
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setOpenEditDialog(true);
+  };
+
+  const handleUpdateUser = async (data: any) => {
+    if (!selectedUser) return;
+    
+    try {
+      await userService.update(selectedUser.id, data);
+      toast.success('Utilisateur mis à jour avec succès');
+      setOpenEditDialog(false);
+      loadUsers();
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast.error('Erreur lors de la mise à jour de l\'utilisateur');
     }
   };
 
@@ -63,7 +86,7 @@ const Users = () => {
   const getRoleBadgeVariant = (role: UserRole) => {
     switch (role) {
       case 'Admin': return 'destructive';
-      case 'Gérant': return 'default'; // Changed from 'warning' to 'default'
+      case 'Gérant': return 'default';
       case 'Chef_Projet': return 'default';
       case 'Employé': return 'outline';
       default: return 'secondary';
@@ -78,7 +101,7 @@ const Users = () => {
         <div className="flex-1 overflow-auto p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">Utilisateurs</h2>
-            <Button>
+            <Button onClick={() => setOpenDialog(true)}>
               <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un utilisateur
             </Button>
           </div>
@@ -123,7 +146,11 @@ const Users = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Button variant="outline" size="icon">
+                            <Button 
+                              variant="outline" 
+                              size="icon"
+                              onClick={() => handleEditUser(user)}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button 
@@ -145,6 +172,43 @@ const Users = () => {
           </Card>
         </div>
       </div>
+
+      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Créer un nouvel utilisateur</DialogTitle>
+          </DialogHeader>
+          <UserForm
+            onSubmit={async (data) => {
+              try {
+                await userService.create(data);
+                toast.success('Utilisateur créé avec succès');
+                setOpenDialog(false);
+                loadUsers();
+              } catch (error) {
+                toast.error("Erreur lors de la création de l'utilisateur");
+              }
+            }}
+            onCancel={() => setOpenDialog(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier l'utilisateur</DialogTitle>
+          </DialogHeader>
+          {selectedUser && (
+            <UserForm
+              initialData={selectedUser}
+              isEdit={true}
+              onSubmit={handleUpdateUser}
+              onCancel={() => setOpenEditDialog(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

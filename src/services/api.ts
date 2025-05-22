@@ -27,15 +27,15 @@ const fetchData = async (
     const response = await fetch(`${API_URL}/${endpoint}`, options);
     
     if (!response.ok) {
-      let errorMessage = 'Une erreur est survenue';
+     let errorMessage = 'Une erreur est survenue';
       try {
         const errorData = await response.json();
         errorMessage = errorData.message || errorMessage;
-      } catch (e) {
+    } catch (e) {
         // Si la réponse n'est pas du JSON
         errorMessage = `Erreur HTTP ${response.status}: ${response.statusText}`;
       }
-      throw new Error(errorMessage);
+     throw new Error(errorMessage);
     }
 
     // Pour les requêtes DELETE qui peuvent ne pas retourner de contenu
@@ -47,11 +47,11 @@ const fetchData = async (
     return data;
   } catch (error) {
     console.error('API error:', error);
-    // Afficher un toast d'erreur
+  //   Afficher un toast d'erreur
     toast.error(error instanceof Error ? error.message : 'Une erreur est survenue');
     throw error;
   }
-};
+}; 
 
 // Authentification
 export const authService = {
